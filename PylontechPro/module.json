@@ -1,0 +1,13 @@
+{
+    "id": "{C6A2F25D-1E3D-4C39-82B1-52E5B1DCA777}",
+    "name": "Pylontech Battery PRO",
+    "type": 3,
+    "vendor": "Custom",
+    "aliases": [
+        "Pylontech RS485 Battery"
+    ],
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "prefix": "PYLON"
+}
