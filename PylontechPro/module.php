@@ -1,7 +1,7 @@
 
 <?php
 
-class PylontechPro extends IPSModule
+class PylontechBatteryPRO extends IPSModule
 {
 
     public function Create()
