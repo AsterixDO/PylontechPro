@@ -1,12 +1,12 @@
 {
-    "id": "{4C8A2F81-59C6-4A1B-93C4-7C1C6A4A2E10}",
+    "id": "{E1F2A3B4-C5D6-47AA-8899-001122334455}",
     "name": "PylontechPro",
     "author": "Custom",
     "url": "",
     "compatibility": {
         "version": "6.0"
     },
-    "version": "1.1",
+    "version": "4.0",
     "build": 1,
-    "date": 20260411
+    "date": 20260412
 }

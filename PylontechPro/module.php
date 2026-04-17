@@ -1,4 +1,3 @@
-
 <?php
 
 class PylontechPro extends IPSModule
@@ -13,7 +12,7 @@ class PylontechPro extends IPSModule
         $this->RegisterTimer(
             "Update",
             0,
-            'PYLON_Update($_IPS["TARGET"]);'
+            'IPS_RequestAction($_IPS["TARGET"], "Update", 0);'
         );
 
         $this->RegisterVariableInteger("PackCount","Battery Packs");
@@ -26,23 +25,26 @@ class PylontechPro extends IPSModule
         $this->RegisterVariableFloat("MinCell","Min Cell Voltage","~Volt");
         $this->RegisterVariableFloat("MaxCell","Max Cell Voltage","~Volt");
         $this->RegisterVariableFloat("CellDelta","Cell Delta","~Volt");
-
     }
-
 
     public function ApplyChanges()
     {
         parent::ApplyChanges();
 
         $interval = $this->ReadPropertyInteger("Interval") * 1000;
-
         $this->SetTimerInterval("Update",$interval);
     }
 
+    public function RequestAction($Ident, $Value)
+    {
+        if($Ident == "Update")
+        {
+            $this->Update();
+        }
+    }
 
     public function Update()
     {
-
         $request="~20024642E002FF00";
 
         $this->SendDebug("Request",$request,0);
@@ -54,10 +56,8 @@ class PylontechPro extends IPSModule
         ]));
     }
 
-
     public function ReceiveData($JSONString)
     {
-
         $data=json_decode($JSONString);
         $buffer=$data->Buffer;
 
@@ -65,7 +65,6 @@ class PylontechPro extends IPSModule
             return;
 
         $packCount=hexdec($buffer[17].$buffer[18]);
-
         $this->SetValue("PackCount",$packCount);
 
         $offset=19;
@@ -79,14 +78,11 @@ class PylontechPro extends IPSModule
 
         for($pack=1;$pack<=$packCount;$pack++)
         {
-
             $cellCount=hexdec($buffer[$offset].$buffer[$offset+1]);
-
             $offset+=2;
 
             for($cell=1;$cell<=$cellCount;$cell++)
             {
-
                 $voltage=hexdec(
                     $buffer[$offset].
                     $buffer[$offset+1].
@@ -101,20 +97,17 @@ class PylontechPro extends IPSModule
 
                 $ident="P".$pack."_Cell".$cell;
 
-                if(!$this->GetIDForIdent($ident))
+                if(@$this->GetIDForIdent($ident)===false)
                     $this->RegisterVariableFloat($ident,"Pack".$pack." Cell".$cell,"~Volt");
 
                 $this->SetValue($ident,$voltage);
             }
 
-
             $tempCount=hexdec($buffer[$offset].$buffer[$offset+1]);
-
             $offset+=2;
 
             for($t=1;$t<=$tempCount;$t++)
             {
-
                 $temp=(hexdec(
                     $buffer[$offset].
                     $buffer[$offset+1].
@@ -126,13 +119,11 @@ class PylontechPro extends IPSModule
 
                 $ident="P".$pack."_Temp".$t;
 
-                if(!$this->GetIDForIdent($ident))
+                if(@$this->GetIDForIdent($ident)===false)
                     $this->RegisterVariableFloat($ident,"Pack".$pack." Temp".$t,"~Temperature");
 
                 $this->SetValue($ident,$temp);
             }
-
-
 
             $current=hexdec(
                 $buffer[$offset].
@@ -152,12 +143,10 @@ class PylontechPro extends IPSModule
 
             $ident="P".$pack."_Current";
 
-            if(!$this->GetIDForIdent($ident))
+            if(@$this->GetIDForIdent($ident)===false)
                 $this->RegisterVariableFloat($ident,"Pack".$pack." Current","~Ampere");
 
             $this->SetValue($ident,$current);
-
-
 
             $voltage=hexdec(
                 $buffer[$offset].
@@ -172,12 +161,10 @@ class PylontechPro extends IPSModule
 
             $ident="P".$pack."_Voltage";
 
-            if(!$this->GetIDForIdent($ident))
+            if(@$this->GetIDForIdent($ident)===false)
                 $this->RegisterVariableFloat($ident,"Pack".$pack." Voltage","~Volt");
 
             $this->SetValue($ident,$voltage);
-
-
 
             $remain=hexdec(
                 $buffer[$offset].
@@ -187,7 +174,6 @@ class PylontechPro extends IPSModule
             )/1000;
 
             $offset+=4;
-
 
             $total=hexdec(
                 $buffer[$offset].
@@ -207,12 +193,10 @@ class PylontechPro extends IPSModule
 
             $ident="P".$pack."_SOC";
 
-            if(!$this->GetIDForIdent($ident))
+            if(@$this->GetIDForIdent($ident)===false)
                 $this->RegisterVariableFloat($ident,"Pack".$pack." SOC","~Intensity.100");
 
             $this->SetValue($ident,$soc);
-
-
 
             $cycles=hexdec(
                 $buffer[$offset].
@@ -225,7 +209,7 @@ class PylontechPro extends IPSModule
 
             $ident="P".$pack."_Cycles";
 
-            if(!$this->GetIDForIdent($ident))
+            if(@$this->GetIDForIdent($ident)===false)
                 $this->RegisterVariableInteger($ident,"Pack".$pack." Cycles");
 
             $this->SetValue($ident,$cycles);
@@ -233,8 +217,8 @@ class PylontechPro extends IPSModule
             $offset+=2;
         }
 
-
-        $totalSOC=$totalSOC/$packCount;
+        if($packCount>0)
+            $totalSOC=$totalSOC/$packCount;
 
         $power=$totalVoltage*$totalCurrent;
 
@@ -246,7 +230,6 @@ class PylontechPro extends IPSModule
         $this->SetValue("MinCell",$cellMin);
         $this->SetValue("MaxCell",$cellMax);
         $this->SetValue("CellDelta",$cellMax-$cellMin);
-
     }
 
 }
